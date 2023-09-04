@@ -1,6 +1,6 @@
-import { createPool } from 'mysql2';
+import { createConnection } from 'mysql2';
 
-const connection = createPool({
+const connection = createConnection({
     host: 'containers-us-west-152.railway.app',
     user: 'root',
     database: 'railway',
