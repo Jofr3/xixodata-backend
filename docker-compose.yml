@@ -1,0 +1,32 @@
+version: '1.0'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_DATABASE: your_database_name_here
+      MYSQL_USER: your_mysql_user_here
+      MYSQL_PASSWORD: your_mysql_password_here
+      MYSQL_ROOT_PASSWORD: your_root_password_here
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      # PMA_ARBITRARY: 1
+      PMA_DATABASE: your_database_name_here
+      PMA_HOST: db
+      PMA_USER: your_mysql_user_here
+      PMA_PASSWORD: your_mysql_password_here
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
