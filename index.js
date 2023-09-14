@@ -5,9 +5,11 @@ const port = 3000
 
 app.use(cors())
 
-import userRoutes from './routes/userRoutes.js'
+import torroRoutes from './routes/torroRoutes.js'
+import ingredientsRoutes from './routes/ingredientsRoutes.js'
 
-app.use('/user', userRoutes)
+app.use('/torro', torroRoutes)
+app.use('/ingredients', ingredientsRoutes)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
