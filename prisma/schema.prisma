@@ -11,6 +11,8 @@ model Format {
     id           Int          @id @default(autoincrement())
     nom          String
     torro        String
+    barres       Int
+    cuita        Float
     gramsXcaixo  Int
     barresXcaixo Int
     barresXcaixa Int

@@ -6,6 +6,8 @@ const add = async (req, res) => {
         data: {
             nom: req.body.nom,
             torro: req.body.torro,
+            barres: parseInt(req.body.barres),
+            cuita: parseFloat(req.body.cuita),
             gramsXcaixo: req.body.gramsXcaixo,
             barresXcaixo: req.body.barresXcaixo,
             barresXcaixa: req.body.barresXcaixa,
@@ -53,6 +55,23 @@ const getById = async (req, res) => {
     res.json(result)
 }
 
+const getAllBySeason = async (req, res) => {
+
+    const targetSeason = parseInt(req.params.formatTemporada)
+
+    const result = await prisma.format.findMany({
+        where: {
+            temporada: targetSeason
+        },
+        include: {
+            packagings: true,
+            ingredients: true
+        }
+    })
+
+    res.json(result)
+}
+
 const getByName = async (req, res) => {
 
     const targetNom = req.params.formatNom
@@ -66,11 +85,10 @@ const getByName = async (req, res) => {
     res.json(result)
 }
 
-const getByNameAndSeason = async (req, res) => {
+const getAllBySeasonAndName = async (req, res) => {
 
     const targetTorro = req.params.formatTorro
     const targetSeason = parseInt(req.params.formatTemporada)
-    console.log(targetSeason, targetTorro)
 
     const result = await prisma.format.findMany({
         where: {
@@ -83,7 +101,71 @@ const getByNameAndSeason = async (req, res) => {
         }
     })
 
-    console.log(result)
+    let formats = []
+    result.forEach(function(format) {
+        let newIngredients = []
+        format.ingredients.forEach(function(ingredient) {
+            newIngredients.push({
+                nom: ingredient.nom,
+                quantitat: ingredient.quantitat,
+                merme: ingredient.merme,
+                pesReal: ingredient.quantitat - ingredient.merme,
+                pesTotal: ingredient.quantitat * (format.barres / format.cuita),
+                mermeReal: (ingredient.quantitat * (format.barres / format.cuita)) / 100 * 5,
+                pesRealReal: (ingredient.quantitat * (format.barres / format.cuita)) - ((ingredient.quantitat * (format.barres / format.cuita)) / 100 * 5)
+            })
+        })
+
+        newIngredients.push({
+            nom: "Total",
+            quantitat: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.quantitat; }, 0),
+            merme: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.merme; }, 0),
+            pesReal: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.pesReal; }, 0),
+            pesTotal: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.pesTotal; }, 0),
+            mermeReal: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.mermeReal; }, 0),
+            pesRealReal: newIngredients.reduce((accumulator, currentObject) => { return accumulator + currentObject.pesRealReal; }, 0),
+        })
+
+        let newFormats = [
+            { format: "Encaixat a", quantitat: format.gramsXcaixo, mesura: "gr/caixo" },
+            { format: "Tallat a", quantitat: format.barresXcaixo, mesura: "barres/caixo" },
+            { format: "Envasat a", quantitat: format.barresXcaixa, mesura: "gr/caixa" },
+            { format: "Caixons", quantitat: newIngredients[newIngredients.length - 1].pesRealReal / format.gramsXcaixo, mesura: "num caixons" },
+            { format: "Barres", quantitat: (newIngredients[newIngredients.length - 1].pesRealReal / format.gramsXcaixo) * format.barresXcaixo, mesura: "num barres" },
+            { format: "Caixes", quantitat: ((newIngredients[newIngredients.length - 1].pesRealReal / format.gramsXcaixo) * format.barresXcaixo) / format.barresXcaixa, mesura: "num caixes" },
+        ]
+
+        let newPackagings = []
+
+        let newFormat = {
+            id: format.id,
+            nom: format.nom,
+            barres: format.barres,
+            cuita: format.cuita,
+            ingredients: newIngredients,
+            formats: newFormats,
+            packagings: newPackagings
+        }
+
+        formats.push(newFormat)
+    })
+
+    res.json(formats)
+}
+
+const clean = async (req, res) => {
+    const targetId = parseInt(req.params.formatId)
+
+    const result = await prisma.format.update({
+        where: {
+            id: targetId
+        },
+        data: {
+            ingredients: {
+                set: []
+            }
+        }
+    })
 
     res.json(result)
 }
@@ -99,6 +181,8 @@ const edit = async (req, res) => {
         data: {
             nom: req.body.nom,
             torro: req.body.torro,
+            barres: parseInt(req.body.barres),
+            cuita: parseFloat(req.body.cuita),
             gramsXcaixo: req.body.gramsXcaixo,
             barresXcaixo: req.body.barresXcaixo,
             barresXcaixa: req.body.barresXcaixa,
@@ -106,7 +190,7 @@ const edit = async (req, res) => {
                 connect: req.body.packagings.map(itemId => ({ id: itemId }))
             },
             ingredients: {
-                connect: req.body.ingredients.map(itemId => ({ id: itemId }))
+                create: req.body.ingredients.map(ingredient => ({ nom: ingredient.nom, quantitat: ingredient.quantitat, merme: ingredient.merme }))
             },
             temporada: req.body.temporada,
         },
@@ -133,7 +217,9 @@ export {
     getAll,
     getById,
     getByName,
-    getByNameAndSeason,
+    getAllBySeason,
+    getAllBySeasonAndName,
+    clean,
     edit,
     remove
 }
