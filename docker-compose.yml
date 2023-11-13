@@ -1,6 +1,9 @@
-version: '1.0'
-
 services:
+  nodejs:
+    build: .
+    command: npm run serve
+    ports:
+      - "3000:3000"
   db:
     image: mysql:8.0
     container_name: mysql_db
