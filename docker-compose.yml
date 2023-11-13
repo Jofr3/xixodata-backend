@@ -1,9 +1,4 @@
 services:
-  nodejs:
-    build: .
-    command: npm run serve
-    ports:
-      - "3000:3000"
   db:
     image: mysql:8.0
     container_name: mysql_db
@@ -27,6 +22,13 @@ services:
       PMA_PASSWORD: your_mysql_password_here
     ports:
       - "8080:80"
+    depends_on:
+      - db
+  nodejs:
+    build: .
+    command: npm run serve
+    ports:
+      - "3000:3000"
     depends_on:
       - db
 
