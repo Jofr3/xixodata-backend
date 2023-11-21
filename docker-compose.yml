@@ -24,9 +24,15 @@ services:
       - "8080:80"
     depends_on:
       - db
-  nodejs:
-    build: .
-    command: npm run serve
+  api:
+    image: node:latest
+    working_dir: /usr/app
+    volumes:
+      - "./:/usr/app"
+    command: >
+      sh -c "npm install  &&
+             npx prisma migrate deploy &&
+             npm run serve"
     ports:
       - "3000:3000"
     depends_on:
