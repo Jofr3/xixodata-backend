@@ -1,7 +1,6 @@
 import prisma from '../config/db.js'
 
 const add = async (req, res) => {
-
     const result = await prisma.format.create({
         data: {
             nom: req.body.nom,

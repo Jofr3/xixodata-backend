@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import endPoints from 'express-list-endpoints'
+import serverless from "serverless-http";
 const app = express()
 const port = 3000
 
@@ -21,5 +22,7 @@ app.get('/routes', (_req, res) => {
     res.status(200).send(endPoints(app));
 });
 
-app.listen(port, () => {
-})
+export const handler = serverless(app);
+
+// app.listen(port, () => {
+// })
